@@ -31,13 +31,6 @@ const navItems = [
     altImage: "/images/Fees.png",
   },
   {
-    id: "portal",
-    label: "Portal",
-    // path: "/login",
-    image: "/images/ClientPortal.png",
-    altImage: "/images/ClientPortal.png",
-  },
-  {
     id: "disclosures",
     label: "Disclosures",
     path: "/disclosures",
@@ -57,6 +50,13 @@ const navItems = [
     path: "/links",
     image: "/images/LinksAndArticles.png",
     altImage: "/images/LinksAndArticles.png",
+  },
+  {
+    id: "portal",
+    label: "Portal",
+    path: "/login",
+    image: "/images/ClientPortal.png",
+    altImage: "/images/ClientPortal.png",
   },
 ];
 

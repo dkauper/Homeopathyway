@@ -8,9 +8,8 @@ import {
   DialogTitle, 
   DialogContent, 
   DialogActions,
-  Tabs,
   Tab,
-  Grid
+  Tabs 
 } from '@mui/material';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -19,10 +18,28 @@ interface LoginModalProps {
   onClose: () => void;
 }
 
+interface SignupFormData {
+  firstName: string;
+  lastName: string;
+  prefix: string;
+  age: string;  // Keep as string for form handling
+  email: string;
+  password: string;
+  homePhone: string;
+  mobilePhone: string;
+}
+
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
-  const [tabValue, setTabValue] = useState(0);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [signupData, setSignupData] = useState({
+  const [activeTab, setActiveTab] = useState(0);
+  const login = useAuthStore(state => state.login);
+  const signup = useAuthStore(state => state.signup);
+
+  // Login state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Signup state
+  const [signupData, setSignupData] = useState<SignupFormData>({
     firstName: '',
     lastName: '',
     prefix: '',
@@ -30,55 +47,58 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
     email: '',
     password: '',
     homePhone: '',
-    mobilePhone: '',
+    mobilePhone: ''
   });
-  
-  const { login, signup } = useAuthStore();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoginData({ ...loginData, [e.target.name]: e.target.value });
-  };
-
-  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupData({ ...signupData, [e.target.name]: e.target.value });
+    setActiveTab(newValue);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(loginData.email, loginData.password);
+      await login(loginEmail, loginPassword);
       onClose();
     } catch (error) {
       console.error('Login failed:', error);
-      // Handle login error (show message to user)
     }
   };
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signup(signupData);
+      // Convert age to number or undefined if empty
+      const parsedData = {
+        ...signupData,
+        age: signupData.age ? parseInt(signupData.age, 10) : undefined
+      };
+      await signup(parsedData);
       onClose();
     } catch (error) {
       console.error('Signup failed:', error);
-      // Handle signup error (show message to user)
     }
+  };
+
+  const handleSignupInputChange = (field: keyof SignupFormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setSignupData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Tabs value={tabValue} onChange={handleTabChange} centered>
+        <Tabs value={activeTab} onChange={handleTabChange} centered>
           <Tab label="Login" />
           <Tab label="Sign Up" />
         </Tabs>
       </DialogTitle>
       <DialogContent>
-        {tabValue === 0 ? (
+        {activeTab === 0 ? (
+          // Login Form
           <Box component="form" onSubmit={handleLoginSubmit} sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -89,8 +109,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
               name="email"
               autoComplete="email"
               autoFocus
-              value={loginData.email}
-              onChange={handleLoginChange}
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
             />
             <TextField
               margin="normal"
@@ -101,8 +121,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
               type="password"
               id="password"
               autoComplete="current-password"
-              value={loginData.password}
-              onChange={handleLoginChange}
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
             />
             <Button
               type="submit"
@@ -114,89 +134,87 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
             </Button>
           </Box>
         ) : (
+          // Signup Form
           <Box component="form" onSubmit={handleSignupSubmit} sx={{ mt: 1 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  name="firstName"
-                  label="First Name"
-                  value={signupData.firstName}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  name="lastName"
-                  label="Last Name"
-                  value={signupData.lastName}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="prefix"
-                  label="Prefix"
-                  value={signupData.prefix}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  name="age"
-                  label="Age"
-                  type="number"
-                  value={signupData.age}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="email"
-                  label="Email Address"
-                  type="email"
-                  value={signupData.email}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  value={signupData.password}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="homePhone"
-                  label="Home Phone"
-                  value={signupData.homePhone}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="mobilePhone"
-                  label="Mobile Phone"
-                  value={signupData.mobilePhone}
-                  onChange={handleSignupChange}
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="firstName"
+              label="First Name"
+              name="firstName"
+              value={signupData.firstName}
+              onChange={handleSignupInputChange('firstName')}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="lastName"
+              label="Last Name"
+              name="lastName"
+              value={signupData.lastName}
+              onChange={handleSignupInputChange('lastName')}
+            />
+            <TextField
+              margin="normal"
+              fullWidth
+              id="prefix"
+              label="Prefix (Mr./Mrs./Dr.)"
+              name="prefix"
+              value={signupData.prefix}
+              onChange={handleSignupInputChange('prefix')}
+            />
+            <TextField
+              margin="normal"
+              fullWidth
+              id="age"
+              label="Age"
+              name="age"
+              type="number"
+              value={signupData.age}
+              onChange={handleSignupInputChange('age')}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="signupEmail"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              value={signupData.email}
+              onChange={handleSignupInputChange('email')}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="signupPassword"
+              value={signupData.password}
+              onChange={handleSignupInputChange('password')}
+            />
+            <TextField
+              margin="normal"
+              fullWidth
+              id="homePhone"
+              label="Home Phone"
+              name="homePhone"
+              value={signupData.homePhone}
+              onChange={handleSignupInputChange('homePhone')}
+            />
+            <TextField
+              margin="normal"
+              fullWidth
+              id="mobilePhone"
+              label="Mobile Phone"
+              name="mobilePhone"
+              value={signupData.mobilePhone}
+              onChange={handleSignupInputChange('mobilePhone')}
+            />
             <Button
               type="submit"
               fullWidth
